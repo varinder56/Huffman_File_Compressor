@@ -115,7 +115,7 @@ public class AppSkeleton extends JFrame {
         contentPanel.add(new Compression(), "Compression");
         contentPanel.add(new Decompression(), "Decompression");
         contentPanel.add(new History(), "History");
-        contentPanel.add(new About(), "About");
+        
 
         add(contentPanel, BorderLayout.CENTER);
     }

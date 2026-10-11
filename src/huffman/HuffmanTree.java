@@ -1,5 +1,4 @@
 package huffman;
-
 import java.util.PriorityQueue;
 
 public class HuffmanTree {
@@ -8,10 +7,7 @@ public class HuffmanTree {
 
     public void buildTree(long[] frequencies) {
 
-        PriorityQueue<HuffmanNode> queue
-                = new PriorityQueue<>(
-                        (a, b) -> Long.compare(a.frequency, b.frequency)
-                );
+        PriorityQueue<HuffmanNode> queue = new PriorityQueue<>((a, b) -> Long.compare(a.frequency, b.frequency));
 
         for (int i = 0; i < frequencies.length; i++) {
             if (frequencies[i] > 0) {
@@ -34,22 +30,33 @@ public class HuffmanTree {
 
         root = queue.poll();
     }
-
+    ////
     ///////
     public HuffmanNode getRoot() {
         return root;
     }
+    //////
+    //// ///
+    ////
+    public String[] generateCodes() {
 
-    /////////
-    public String[] generateCodes(HuffmanNode node, String code, String[] codes) {
-
-        if (node.left == null && node.right == null) {
-            codes[node.byteValue] = code;
-            return codes;
+        String[] codes = new String[256];
+        if (root != null) {
+            generateCodes(root, "", codes);
         }
-        generateCodes(node.left, code + "0", codes);
-        generateCodes(node.right, code + "1", codes);
 
         return codes;
+    }
+    /////////
+    private String[] generateCodes(HuffmanNode node, String code, String[] codes) {
+
+        if (node.left == null && node.right == null) {
+            codes[node.byteValue] = code.isEmpty() ? "0" : code;
+            return codes;
+        }
+
+        generateCodes(node.left, code + "0", codes);
+        generateCodes(node.right, code + "1", codes);
+         return codes;
     }
 }
