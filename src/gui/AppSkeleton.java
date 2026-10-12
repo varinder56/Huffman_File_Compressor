@@ -78,7 +78,7 @@ public class AppSkeleton extends JFrame {
         addNavigationButton("Compression", "Compression");
         addNavigationButton("Decompression", "Decompression");
         addNavigationButton("Show History", "History");
-        addNavigationButton("About", "About");
+        
 
         //! Assemble sidebar
         sidebar.add(headerSection, BorderLayout.NORTH);
@@ -132,7 +132,6 @@ public class AppSkeleton extends JFrame {
                 case 0 -> "Compression";
                 case 1 -> "Decompression";
                 case 2 -> "History";
-                case 3 -> "About";
                 default -> "";
             };
 

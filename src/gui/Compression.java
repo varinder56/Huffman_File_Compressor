@@ -1,6 +1,7 @@
 
 package gui;
 
+import huffman.HuffmanCompressor;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
@@ -26,7 +27,7 @@ public class Compression extends JPanel {
     private final JLabel saved = new JLabel("—");
     private final JLabel status = new JLabel("Waiting");
 
-    private final JTextArea log = new JTextArea(5, 30);
+    private final JTextArea log = new JTextArea(10, 30);
 
     public Compression() {
 
@@ -39,12 +40,16 @@ public class Compression extends JPanel {
         heading.setForeground(textColor);
         add(heading, BorderLayout.NORTH);
 
-        JPanel content = new JPanel(new GridLayout(0, 1, 0, 10));
+        JPanel content = new JPanel();
+        content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
         content.setOpaque(false);
 
         content.add(fileRow("Input File", inputLabel, "Choose File", true));
+        content.add(Box.createVerticalStrut(10));
+
         content.add(fileRow("Output Destination", outputLabel,
                 "Choose Location", false));
+        content.add(Box.createVerticalStrut(10));
 
         JPanel summary = new JPanel(new GridLayout(1, 4, 8, 0));
         summary.setOpaque(false);
@@ -53,20 +58,27 @@ public class Compression extends JPanel {
         summary.add(statCard("Space Saved", saved));
         summary.add(statCard("Status", status));
 
+        summary.setAlignmentX(Component.LEFT_ALIGNMENT);
         content.add(summary);
+        content.add(Box.createVerticalStrut(10));
 
         log.setEditable(false);
-        log.setFont(new Font("SansSerif", Font.PLAIN, 13));
+        log.setFont(new Font("SansSerif", Font.PLAIN, 15));
         log.setForeground(grey);
         log.setBackground(Color.WHITE);
-        log.setLineWrap(true);
-        log.setWrapStyleWord(true);
+        log.setLineWrap(false);
         log.setBorder(new EmptyBorder(12, 12, 12, 12));
-        log.setText("Select an input file to begin.\n");
+        log.setText("Select an input file to begin.");
+        log.setRows(10);
 
+        log.setAlignmentX(Component.LEFT_ALIGNMENT);
+        log.setMaximumSize(new Dimension(Integer.MAX_VALUE, 220));
+        log.setPreferredSize(new Dimension(800, 220));
         content.add(log);
+        content.add(Box.createVerticalStrut(10));
 
         JButton compressButton = new JButton("Compress File");
+        compressButton.setFont(new Font("SansSerif", Font.BOLD, 14));
         compressButton.setBackground(blue);
         compressButton.setForeground(Color.WHITE);
         compressButton.setFocusPainted(false);
@@ -74,6 +86,7 @@ public class Compression extends JPanel {
 
         JPanel buttonRow = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         buttonRow.setOpaque(false);
+        buttonRow.setAlignmentX(Component.LEFT_ALIGNMENT);
         buttonRow.add(compressButton);
         content.add(buttonRow);
 
@@ -86,16 +99,27 @@ public class Compression extends JPanel {
         JPanel row = new JPanel(new BorderLayout(10, 5));
         row.setBackground(Color.WHITE);
         row.setBorder(new EmptyBorder(10, 12, 10, 12));
+        row.setAlignmentX(Component.LEFT_ALIGNMENT);
+        row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 100));
 
         JPanel labels = new JPanel(new GridLayout(2, 1, 0, 5));
         labels.setOpaque(false);
-        labels.add(new JLabel(title));
+
+        JLabel titleLabel = new JLabel(title);
+        titleLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
+        fileLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
+
+        labels.add(titleLabel);
         labels.add(fileLabel);
 
         JButton button = new JButton(buttonText);
+        button.setFont(new Font("SansSerif", Font.BOLD, 13));
         button.addActionListener(e -> {
-            if (input) chooseInput();
-            else chooseOutput();
+            if (input) {
+                chooseInput();
+            } else {
+                chooseOutput();
+            }
         });
 
         row.add(labels, BorderLayout.CENTER);
@@ -110,7 +134,11 @@ public class Compression extends JPanel {
         card.setBackground(Color.WHITE);
         card.setBorder(new EmptyBorder(10, 10, 10, 10));
 
-        card.add(new JLabel(title));
+        JLabel titleLabel = new JLabel(title);
+        titleLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        value.setFont(new Font("SansSerif", Font.BOLD, 15));
+
+        card.add(titleLabel);
         card.add(value);
 
         return card;
@@ -120,8 +148,9 @@ public class Compression extends JPanel {
 
         JFileChooser chooser = new JFileChooser();
 
-        if (chooser.showOpenDialog(this) != JFileChooser.APPROVE_OPTION)
+        if (chooser.showOpenDialog(this) != JFileChooser.APPROVE_OPTION) {
             return;
+        }
 
         File selected = chooser.getSelectedFile();
 
@@ -149,7 +178,7 @@ public class Compression extends JPanel {
         status.setText("Ready");
 
         log.setText("Input selected: " + inputFile.getName() + "\n"
-                + "Choose the output destination, then start compression.\n");
+                + "Choose the output destination, then start compression.");
     }
 
     private void chooseOutput() {
@@ -167,8 +196,9 @@ public class Compression extends JPanel {
 
             File selected = chooser.getSelectedFile();
 
-            if (!selected.getName().toLowerCase().endsWith(".huff"))
+            if (!selected.getName().toLowerCase().endsWith(".huff")) {
                 selected = new File(selected.getAbsolutePath() + ".huff");
+            }
 
             outputFile = selected;
             outputLabel.setText(outputFile.getAbsolutePath());
@@ -183,27 +213,61 @@ public class Compression extends JPanel {
             return;
         }
 
-        if (inputFile.getAbsoluteFile().equals(outputFile.getAbsoluteFile())) {
+        try {
+            if (inputFile.getCanonicalFile().equals(
+                    outputFile.getCanonicalFile())) {
+                JOptionPane.showMessageDialog(this,
+                        "Input and output must be different files.");
+                return;
+            }
+
+            status.setText("Compressing");
+            log.setText("Starting compression...\n");
+
+            HuffmanCompressor compressor = new HuffmanCompressor();
+
+            HuffmanCompressor.CompressionResult result =
+                    compressor.compress(inputFile, outputFile,
+                            message -> {
+                                // Progress is displayed below in the
+                                // requested formatted layout.
+                            });
+
+            originalSize.setText(formatSize(result.originalSize));
+            compressedSize.setText(formatSize(result.compressedSize));
+            saved.setText(String.format("%.2f%%", result.savedPercentage));
+            status.setText("Completed");
+
+            log.setText(
+                    "Starting compression...\n"
+                    + "1. Frequency counting completed.   Time: O(n) | Space: O(1)\n\n"
+                    + "2. Huffman tree built.   Time: O(k log k) | Space: O(k)\n\n"
+                    + "3. Huffman codes generated.   Time: O(k) | Space: O(k)\n\n"
+                    + "4. Encoded data written successfully.   Time: O(n + L) | Space: O(1)\n\n"
+                    + "Compression completed.\n\n"
+                    + "Output: " + outputFile.getAbsolutePath()
+            );
+
+        } catch (IOException e) {
+            status.setText("Failed");
+            log.setText("Compression failed: " + e.getMessage());
+
             JOptionPane.showMessageDialog(this,
-                    "Input and output must be different files.");
-            return;
+                    "Compression failed:\n" + e.getMessage());
         }
-
-        log.setText("Input: " + inputFile.getName() + "\n"
-                + "Output: " + outputFile.getAbsolutePath() + "\n"
-                + "Ready to connect the Huffman algorithm.\n");
-
-        status.setText("Not connected");
     }
 
     private String formatSize(long bytes) {
 
-        if (bytes < 1024)
+        if (bytes < 1024) {
             return bytes + " B";
+        }
 
-        if (bytes < 1024 * 1024)
+        if (bytes < 1024 * 1024) {
             return String.format("%.2f KB", bytes / 1024.0);
+        }
 
-        return String.format("%.2f MB", bytes / (1024.0 * 1024.0));
+        return String.format("%.2f MB",
+                bytes / (1024.0 * 1024.0));
     }
 }
