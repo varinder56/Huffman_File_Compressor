@@ -3,9 +3,9 @@ import java.util.PriorityQueue;
 
 public class HuffmanTree {
 
-    private HuffmanNode root;
+    private static HuffmanNode root;
 
-    public void buildTree(long[] frequencies) {
+    public static void buildTree(long[] frequencies) {
 
         PriorityQueue<HuffmanNode> queue = new PriorityQueue<>((a, b) -> Long.compare(a.frequency, b.frequency));
 
@@ -32,13 +32,13 @@ public class HuffmanTree {
     }
     ////
     ///////
-    public HuffmanNode getRoot() {
+    public static HuffmanNode getRoot() {
         return root;
     }
     //////
     //// ///
     ////
-    public String[] generateCodes() {
+    public static String[] generateCodes() {
 
         String[] codes = new String[256];
         if (root != null) {
@@ -48,7 +48,7 @@ public class HuffmanTree {
         return codes;
     }
     /////////
-    private String[] generateCodes(HuffmanNode node, String code, String[] codes) {
+    private static String[] generateCodes(HuffmanNode node, String code, String[] codes) {
 
         if (node.left == null && node.right == null) {
             codes[node.byteValue] = code.isEmpty() ? "0" : code;
